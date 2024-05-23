@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+    <title>MixiePixie</title>
+</head>
+
+<body>
+    <header class="header-section">
+        <div class="logo">
+            <a href="index.html"><img src="images/logo.jpg" alt="MixiePixie Logo"></a>
+            <a href="index.html" class="nav-link">MixiePixie</a>
+        </div>        
+
+        <div class="pages">
+            <div class="item">
+                <a href="index.html" class="nav-link">
+                    <i class='bx bx-home-circle'></i>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="item">
+                <a href="mixer.html" class="nav-link">
+                    <i class='bx bx-fridge'></i>
+                    <span>Mixer</span>
+                </a>
+            </div>
+            <div class="item">
+                <a href="drinks.html" class="nav-link">
+                    <i class='bx bx-drink'></i>
+                    <span>Drinks</span>
+                </a>
+            </div>
+            <div class="item" id="account-dropdown">
+                <a href="#" class="nav-link">
+                    <i class='bx bx-user'></i>
+                    <span>My account</span>
+                    <span class="arrow">&#9662;</span>
+                </a>
+                <div class="dropdown-content">
+                    <div class="dropdown-item" id="active">
+                        <a href="login.html" class="nav-link">
+                            <i class='bx bx-log-in'></i>
+                            <span>Login</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="saved.html" class="nav-link">
+                            <i class='bx bx-book-heart'></i>
+                            <span>Saved</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="privacy.html" class="nav-link">
+                            <i class='bx bx-cookie'></i>
+                            <span>Privacy Policy</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="#" id="logout-btn" class="nav-link">
+                            <i class='bx bx-log-out'></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+			<h1>Log in</h1>
+			<div id="form">
+				<form id="loginForm">
+					<div class="input-value">
+                        <label for="email">Email</label>
+                        <input type="text" id="email" name="email" placeholder="Email" required />
+                    </div>
+                    <div class="input-value">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Password" required />
+                    </div>
+
+					<div class="social">
+                        <div class="facebook">
+                            <i class='bx bxl-facebook-circle' ></i>
+                        </div>
+                        <div class="google">
+                            <i class='bx bxl-google'></i>
+                        </div>
+                        <div class="apple">
+						    <i class='bx bxl-apple'></i>
+						</div>
+					</div>
+
+					<div class="button">
+						<button type="submit" class="btn">Log in</button>
+					</div>
+					<div class="form-links">
+						<p><a href="#">Can't sign in?</a></p>
+						<p><a href="register.html">Create account</a></p>
+					</div>
+				</form>
+			</div>
+		</div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+        import { getDatabase, get, ref, child} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+        import { getAuth, setPersistence, signInWithEmailAndPassword, signOut, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCS3krvqV9N4HX2a5H7yq82RWW_tMilvS0",
+            authDomain: "mixiepixie-eba76.firebaseapp.com",
+            projectId: "mixiepixie-eba76",
+            storageBucket: "mixiepixie-eba76.appspot.com",
+            messagingSenderId: "860212929441",
+            appId: "1:860212929441:web:69c799f4dac9d03f43a1e0",
+            databaseURL: "https://mixiepixie-eba76-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(); 
+        const dbref = ref(db);
+        const auth = getAuth(app);
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const email = document.getElementById('email');
+            const password = document.getElementById('password');
+            const loginForm = document.getElementById('loginForm');
+            const logoutButton = document.getElementById('logout-btn');
+
+
+            // Function to login
+            const signInUser = evt => {
+                evt.preventDefault();     
+
+                signInWithEmailAndPassword(auth, email.value, password.value)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    window.location.href = "saved.html";
+                    localStorage.setItem("user", JSON.stringify(user)); 
+                    setPersistence(auth, browserSessionPersistence)
+                        .then(() => {
+                            console.log("Authentication persistence set to LOCAL");
+                        })
+                        .catch((error) => {
+                            console.error("Error setting authentication persistence:", error);
+                        });
+                })
+                .catch((error) => {
+                    alert("Oh no! " + error.message);
+                });
+            }
+
+            loginForm.addEventListener('submit', signInUser); 
+
+
+            // Events listener for logout
+            logoutButton.addEventListener('click', e => {
+                e.preventDefault();
+                auth.signOut().then(() => {
+                    localStorage.removeItem("user");
+                    alert("You have logged out");
+                    window.location.href = "index.html";
+                }).catch((error) => {
+                    console.error("Error:", error);
+                });
+            });
+
+            window.addEventListener('beforeunload', () => {
+                localStorage.removeItem("user");
+            });
+
+        }); 
+
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <title>MixiePixie</title>
+</head>
+
+<body>
+    <header class="header-section">
+        <div class="logo">
+            <a href="index.html"><img src="images/logo.jpg" alt="MixiePixie Logo"></a>
+            <a href="index.html" class="nav-link">MixiePixie</a>
+        </div>
+
+        <div class="pages">
+            <div class="item">
+                <a href="index.html" class="nav-link">
+                    <i class='bx bx-home-circle'></i>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="item" id="active">
+                <a href="mixer.html" class="nav-link">
+                    <i class='bx bx-fridge'></i>
+                    <span>Mixer</span>
+                </a>
+            </div>
+            <div class="item">
+                <a href="drinks.html" class="nav-link">
+                    <i class='bx bx-drink'></i>
+                    <span>Drinks</span>
+                </a>
+            </div>
+            <div class="item" id="account-dropdown">
+                <a href="#" class="nav-link">
+                    <i class='bx bx-user'></i>
+                    <span>My account</span>
+                    <span class="arrow">&#9662;</span>
+                </a>
+                <div class="dropdown-content">
+                    <div class="dropdown-item">
+                        <a href="login.html" class="nav-link">
+                            <i class='bx bx-log-in'></i>
+                            <span>Login</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="saved.html" class="nav-link">
+                            <i class='bx bx-book-heart'></i>
+                            <span>Saved</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="privacy.html" class="nav-link">
+                            <i class='bx bx-cookie'></i>
+                            <span>Privacy Policy</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="#" id="logout-btn" class="nav-link">
+                            <i class='bx bx-log-out'></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="mixer">
+        <div id="introduction-section">
+            <img id="mixer-image" src="images\mixerside.png" alt="Mixer Image">
+            <div class="mixer-content">
+                <h2>Cocktail Generator</h2>
+                <p> Choose ingredients effortlessly and let MixiePixie
+                    transforms your selection into a pesonalized cocktail recipes.<br>
+                    Shake up your style, savor your creativity,
+                    and cheers to every sip becoming a masterpiece at MixiePixie!
+                </p>
+            </div>
+        </div>
+
+        <div id="categories-container">
+            <h4>Choose your liqours:</h4>
+            <button id="alcohol-buttons" class="ingredient-button"></button>
+            <h4>Choose your mixers:</h4>
+            <button id="mixer-buttons" class="ingredient-button"></button>
+            <h4>Choose your garnish:</h4>
+            <button id="garnish-buttons" class="ingredient-button"></button>
+            <div id="button-container">
+                <button id="mix-button">Shake it up!</button>
+                <button id="reset-button">Start over</button>
+            </div>
+        </div>
+        <br>
+        <div id="Recipes"></div>
+    </main>
+
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Contact Us</h2>
+            <form id="contactForm">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="4" required></textarea>
+                <button type="submit" id="submitBtn">Submit</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Message Sent</h2>
+            <p>Your message has been sent successfully!</p>
+        </div>
+    </div>
+
+    <footer class="footer-section">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="#contactModal" class="nav-link">Contact Us</a>
+            </div>
+            <p>&copy; 2024 MixiePixie. All rights reserved.</p>
+        </div>
+    </footer>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+        import { getDatabase, ref, set, get, remove, child } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, setPersistence, browserSessionPersistence, signOut } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCS3krvqV9N4HX2a5H7yq82RWW_tMilvS0",
+            authDomain: "mixiepixie-eba76.firebaseapp.com",
+            projectId: "mixiepixie-eba76",
+            storageBucket: "mixiepixie-eba76.appspot.com",
+            messagingSenderId: "860212929441",
+            appId: "1:860212929441:web:69c799f4dac9d03f43a1e0",
+            databaseURL: "https://mixiepixie-eba76-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase();
+        const auth = getAuth(app);
+        const dbref = ref(db);
+
+
+        let RecipesContainer = document.getElementById("Recipes");
+        let selectedIngredients = JSON.parse(localStorage.getItem('selectedIngredients')) || [];
+
+
+        // Display the ingredients associated with a specific category
+        function displayIngredientsForCategory(categoryName, selectedIngredients) {
+            const categoryRef = child(dbref, categoryName);
+
+            get(categoryRef).then((snapshot) => {
+                const categoryButtonsContainer = document.getElementById(`${categoryName.toLowerCase()}-buttons`);
+                categoryButtonsContainer.innerHTML = '';
+
+                snapshot.forEach((childSnapshot) => {
+                    const ingredientName = childSnapshot.key;
+                    const ingredientButton = document.createElement('button');
+                    ingredientButton.textContent = ingredientName;
+                    ingredientButton.classList.add('ingredient-button');
+
+
+                    ingredientButton.addEventListener('click', function () {
+                        const isSelected = this.classList.contains('selected');
+                        if (isSelected) {
+                            this.classList.remove('selected');
+                            const index = selectedIngredients.indexOf(ingredientName);
+                            if (index !== -1) {
+                                selectedIngredients.splice(index, 1);
+                            }
+                        } else {
+                            this.classList.add('selected');
+                            selectedIngredients.push(ingredientName);
+                        }
+                        localStorage.setItem('selectedIngredients', JSON.stringify(selectedIngredients));
+                    });
+                    if (selectedIngredients.includes(ingredientName)) {
+                        ingredientButton.classList.add('selected');
+                    }
+                    categoryButtonsContainer.appendChild(ingredientButton);
+                });
+            })
+        }
+
+
+        // Function to display ingredients by categories
+        function displayIngredientCategories() {
+            const categories = ["Alcohol", "Garnish", "Mixer"];
+
+            categories.forEach((category) => {
+                displayIngredientsForCategory(category, selectedIngredients);
+            });
+        }
+
+        displayIngredientCategories();
+
+
+        //Mix-button
+        const shakeItUpButton = document.getElementById('mix-button');
+        shakeItUpButton.addEventListener('click', function () {
+            shakeItUpButton.classList.add('shake');
+
+            setTimeout(function () {
+                shakeItUpButton.classList.remove('shake');
+            }, 3000);
+            RecipesContainer.innerHTML = '';
+            document.getElementById('Recipes').scrollIntoView({ behavior: 'smooth' });
+
+            findMatchingCocktails();
+        });
+
+
+        //Reset-button
+        const resetButton = document.getElementById('reset-button');
+        resetButton.addEventListener('click', function () {
+
+            selectedIngredients = [];
+            localStorage.removeItem('selectedIngredients');
+
+            const categoryButtons = document.querySelectorAll('.ingredient-button');
+            categoryButtons.forEach(button => {
+                button.classList.remove('selected');
+            });
+        });
+
+
+        // Identifies cocktails that match selected ingredients and displays them
+        function findMatchingCocktails() {
+            const selectedIngredients = JSON.parse(localStorage.getItem('selectedIngredients')) || [];
+            const matchingCocktails = [];
+            const promises = [];
+
+            get(child(dbref, 'Recipes')).then((snapshot) => {
+                let numCocktails = 0;
+                snapshot.forEach(() => {
+                    numCocktails++;
+                });
+
+                for (let recipeId = 1; recipeId <= numCocktails; recipeId++) {
+                    const cocktailRef = child(dbref, `Recipes/${recipeId}`);
+
+                    const promise = get(cocktailRef).then((snapshot) => {
+                        const recipe = snapshot.val();
+
+                        if (recipe) {
+                            const cocktailIngredients = Object.keys(recipe.Ingredients);
+                            const matchingIngredient = selectedIngredients.some((ingredient) => {
+                                return cocktailIngredients.includes(ingredient);
+                            });
+
+                            if (matchingIngredient) {
+                                matchingCocktails.push({ recipe, recipeId });
+                            }
+                        }
+                    })
+
+                    promises.push(promise);
+                }
+
+                Promise.all(promises).then(() => {
+                    if (matchingCocktails.length === 0) {
+                        alert("There are no matching cocktails. Please try again.");
+                    } else {
+                        displayMatchingCocktailsWithImages(matchingCocktails);
+                    }
+                });
+            })
+        }
+
+
+        // Display matching cocktails
+        function displayMatchingCocktailsWithImages(recipes, recipeId) {
+
+            const totalPages = Math.ceil(recipes.length / 5);
+            let currentPage = 1;
+
+            displayCocktailsForPage(currentPage);
+            function displayCocktailsForPage(page) {
+                const startIndex = (page - 1) * 5;
+                const endIndex = Math.min(startIndex + 5, recipes.length);
+
+                if (startIndex === 0) {
+                    let matchingCocktailsHeading = document.createElement('h2');
+                    matchingCocktailsHeading.textContent = "Matching Cocktails";
+                    matchingCocktailsHeading.classList.add('matchingCocktailsHeading');
+                    RecipesContainer.appendChild(matchingCocktailsHeading);
+                }
+
+
+                for (let i = startIndex; i < endIndex; i++) {
+                    let { recipe, recipeId } = recipes[i];
+                    let listItem = document.createElement('div');
+                    listItem.classList.add('recipe-container');
+
+                    let leftSide = document.createElement('div');
+                    leftSide.classList.add('recipe-left');
+
+                    let heading = document.createElement('h3');
+                    heading.textContent = recipe.Name ? recipe.Name : "Unknown";
+
+                    let infoParagraph = document.createElement('p');
+                    infoParagraph.textContent = recipe.info ? recipe.info : "No info available";
+
+                    let image = document.createElement('img');
+                    image.src = recipe.image ? recipe.image : "";
+                    image.alt = recipe.Name ? recipe.Name : "";
+
+                    // Create heart button
+                    let heartButton = document.createElement('i');
+                    heartButton.classList.add('bx', 'bx-heart');
+                    heartButton.addEventListener('click', function () {
+                        event.stopPropagation();
+                        toggleSave(recipe, heartButton, recipeId);
+                    });
+
+                    // Check if user is logged in
+                    const user = auth.currentUser;
+                    if (user) {
+                        const userId = user.uid;
+                        const userRecipeRef = ref(db, `UserSavedRecipes/${userId}/${recipeId}`);
+                        get(userRecipeRef).then((snapshot) => {
+                            if (snapshot.exists()) {
+                                heartButton.classList.add('bxs-heart');
+                            } else {
+                                heartButton.classList.add('bx-heart');
+                            }
+                        }).catch((error) => {
+                            console.error("Error checking if recipe exists:", error);
+                        });
+                    } else {
+                        heartButton.classList.add('bx-heart'); // Default heart button if user is not logged in
+                    }
+
+
+                    leftSide.appendChild(heading);
+                    leftSide.appendChild(infoParagraph);
+                    leftSide.appendChild(image);
+                    leftSide.appendChild(heartButton);
+
+                    let rightSide = document.createElement('div');
+                    rightSide.classList.add('recipe-right');
+                    rightSide.style.display = 'none';
+                    rightSide.style.listStyleType = 'none';
+
+                    let Ingredients = document.createElement('li');
+                    Ingredients.innerHTML = "<b>Ingredients</b><br>";
+                    if (recipe.Ingredients) {
+                        for (const [ingredient, amount] of Object.entries(recipe.Ingredients)) {
+                            Ingredients.innerHTML += `${ingredient}: ${amount}<br>`;
+                        }
+                    }
+
+                    let Directions = document.createElement('li');
+                    Directions.innerHTML = "<br><b>Directions</b><br>";
+                    if (recipe.Directions) {
+                        for (const [key, direction] of Object.entries(recipe.Directions)) {
+                            Directions.innerHTML += `${key}: ${direction}<br>`;
+                        }
+                    }
+
+                    // Create a download button
+                    let download = document.createElement('i');
+                    download.classList.add('bx', 'bx-download');
+                    download.addEventListener('click', function () {
+                        event.stopPropagation();
+                        downloadRecipeAsImage(rightSide);
+                    });
+
+                    rightSide.appendChild(Ingredients);
+                    rightSide.appendChild(Directions);
+                    rightSide.appendChild(download);
+
+
+                    // Event listeners to toggle sides when clicked
+                    leftSide.addEventListener('click', function () {
+                        toggleRecipeSide(leftSide, rightSide);
+                    });
+
+                    rightSide.addEventListener('click', function () {
+                        toggleRecipeSide(leftSide, rightSide);
+                    });
+
+                    listItem.appendChild(leftSide);
+                    listItem.appendChild(rightSide);
+
+                    RecipesContainer.appendChild(listItem);
+                }
+
+                if (endIndex < recipes.length) {
+                    addShowMoreButton();
+                }
+            }
+            //Button to display additional content when clicked
+            function addShowMoreButton() {
+                let showMoreButton = document.createElement('button');
+                showMoreButton.textContent = 'See more';
+                showMoreButton.classList.add('show-more-button');
+                showMoreButton.addEventListener('click', function () {
+                    currentPage++;
+                    displayCocktailsForPage(currentPage);
+                    this.remove();
+                });
+                RecipesContainer.appendChild(showMoreButton);
+            }
+        }
+
+
+        // Toggle between recipe sides
+        function toggleRecipeSide(leftSide, rightSide) {
+            if (leftSide.style.display === 'none') {
+                leftSide.style.display = 'block';
+                rightSide.style.display = 'none';
+            } else {
+                leftSide.style.display = 'none';
+                rightSide.style.display = 'block';
+            }
+        }
+
+
+        // Downlodd as img function
+        function downloadRecipeAsImage(recipeContainer) {
+            html2canvas(recipeContainer).then(function (canvas) {
+                let imgData = canvas.toDataURL('image/png'); // Convert canvas to image
+                let link = document.createElement('a');
+                link.download = 'recipe.png';
+                link.href = imgData;
+                link.click();
+            });
+        }
+
+        // Toggle save and unsave recipe
+        function toggleSave(recipe, heartButton, recipeId) {
+            const user = auth.currentUser;
+            if (user) {
+                const userId = user.uid;
+                const userRef = ref(db, `UserSavedRecipes/${userId}/${recipeId}`);
+
+                // Check if the recipe is already saved
+                get(userRef).then(snapshot => {
+                    if (snapshot.exists()) {
+                        remove(userRef)
+                            .then(() => {
+                                console.log("Recipe removed");
+                                heartButton.classList.remove('bxs-heart');
+                                heartButton.classList.add('bx-heart');
+                            })
+                            .catch(error => {
+                                console.error("Error removing recipe:", error);
+                            });
+                    } else {
+                        set(userRef, recipe)
+                            .then(() => {
+                                console.log("Recipe saved");
+                                heartButton.classList.remove('bx-heart');
+                                heartButton.classList.add('bxs-heart');
+                            })
+                            .catch(error => {
+                                console.error("Error saving recipe:", error);
+                            });
+                    }
+                }).catch(error => {
+                    console.error("Error checking if recipe exists:", error);
+                });
+            } else {
+                alert("You need to log in");
+            }
+        }
+        // Events function to logout
+        document.addEventListener("DOMContentLoaded", function () {
+            const logoutButton = document.getElementById('logout-btn');
+            const loggedInUserDiv = document.getElementById('loggedInUser');
+
+            logoutButton.addEventListener('click', e => {
+                e.preventDefault();
+                auth.signOut().then(() => {
+                    localStorage.removeItem("user");
+                    alert("You have logged out");
+                    window.location.href = "index.html";
+                })
+            });
+        });
+
+
+        // Events to clear localStorage when user close the page
+        window.addEventListener('beforeunload', () => {
+            localStorage.clear();
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const submitBtn = document.getElementById('submitBtn');
+            const contactModal = document.getElementById('contactModal');
+            const confirmationModal = document.getElementById('confirmationModal');
+            const closeModalButtons = document.querySelectorAll('.close');
+
+            // Function to show modal
+            function showModal(modal) {
+                console.log('Showing modal:', modal.id);
+                modal.style.display = 'block';
+            }
+
+            // Function to hide modal
+            function hideModal(modal) {
+                console.log('Hiding modal:', modal.id);
+                modal.style.display = 'none';
+            }
+
+            // Event listener for submit button
+            submitBtn.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent form submission
+
+                // Validate form inputs
+                var email = getInputVal('email');
+                var message = getInputVal('message');
+                console.log(message);
+
+                if (email.trim() !== '' && message.trim() !== '') {
+                    // Form inputs are valid, show confirmation modal
+                    hideModal(contactModal);
+                    showModal(confirmationModal);
+                    saveMessage(email, message);
+                } else {
+                    // Form inputs are not valid, alert user
+                    alert('Please fill out all required fields.');
+                }
+            });
+
+            function getInputVal(id) {
+                return document.getElementById(id).value;
+            }
+
+            function saveMessage(email, message) {
+                const newMessageRef = ref(db, 'messages/' + new Date().getTime());
+                set(newMessageRef, {
+                    email: email,
+                    message: message
+                });
+            }
+            // Event listeners for close buttons
+            closeModalButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    console.log('Close button clicked');
+                    hideModal(confirmationModal);
+                    hideModal(contactModal);
+                });
+            });
+
+            // Event listener to close modal when clicking outside the modal
+            window.addEventListener('click', function (event) {
+                if (event.target === contactModal || event.target === confirmationModal) {
+                    console.log('Clicked outside modal');
+                    hideModal(event.target);
+                }
+            });
+
+            // Find the "Contact Us" link
+            const contactLink = document.querySelector('a[href="#contactModal"]');
+
+            // Add a click event listener to the link
+            contactLink.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent default anchor behavior
+                showModal(contactModal); // Show the contact modal when the link is clicked
+            });
+        });
+
+
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

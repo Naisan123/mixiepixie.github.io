@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+    <title>MixiePixie</title>
+</head>
+
+<body>
+    <header class="header-section">
+        <div class="logo">
+            <a href="index.html"><img src="images/logo.jpg" alt="MixiePixie Logo"></a>
+            <a href="index.html" class="nav-link">MixiePixie</a>
+        </div>
+
+        <div class="pages">
+            <div class="item">
+                <a href="index.html" class="nav-link">
+                    <i class='bx bx-home-circle'></i>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="item">
+                <a href="mixer.html" class="nav-link">
+                    <i class='bx bx-fridge'></i>
+                    <span>Mixer</span>
+                </a>
+            </div>
+            <div class="item">
+                <a href="drinks.html" class="nav-link">
+                    <i class='bx bx-drink'></i>
+                    <span>Drinks</span>
+                </a>
+            </div>
+            <div class="item" id="account-dropdown">
+                <a href="#" class="nav-link">
+                    <i class='bx bx-user'></i>
+                    <span>My account</span>
+                    <span class="arrow">&#9662;</span>
+                </a>
+                <div class="dropdown-content">
+                    <div class="dropdown-item">
+                        <a href="login.html" class="nav-link">
+                            <i class='bx bx-log-in'></i>
+                            <span>Login</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="saved.html" class="nav-link">
+                            <i class='bx bx-book-heart'></i>
+                            <span>Saved</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="privacy.html" class="nav-link">
+                            <i class='bx bx-cookie'></i>
+                            <span>Privacy Policy</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="#" id="logout-btn" class="nav-link">
+                            <i class='bx bx-log-out'></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1>Create account</h1>
+            <div id="form">
+                <form id="registerForm">
+                    <div class="input-value">
+                        <label for="email">Email</label>
+                        <input type="text" id="email" name="email" placeholder="Email" required />
+                    </div>
+                    <div class="input-value">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Password" required />
+                    </div>
+                    <div class="input-value">
+                        <label for="cfPassword">Comfirm password</label>
+                        <input type="password" id="cfPassword" name="cfpassword" placeholder="Comfirm password"
+                            required />
+                    </div>
+
+                    <div class="social">
+                        <div class="facebook">
+                            <i class='bx bxl-facebook-circle'></i>
+                        </div>
+                        <div class="google">
+                            <i class='bx bxl-google'></i>
+                        </div>
+                        <div class="apple">
+                            <i class='bx bxl-apple'></i>
+                        </div>
+                    </div>
+
+                    <div class="checkbox">
+                        <input type="checkbox" class="checkbox-color" id="check1" name="check" value="stay" />
+                        <label for="check">I am over 18</label>
+                    </div>
+                    <div class="checkbox">
+                        <input type="checkbox" class="checkbox-color" id="check2" name="check" value="stay" />
+                        <label for="check">I have read and agree with Terms of Service</label>
+                    </div>
+
+                    <div class="button">
+                        <button type="submit" class="btn">Create</button>
+                    </div>
+
+                    <div class="form-links">
+                        <p><a href="login.html">Already have an account?</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Contact Us</h2>
+            <form id="contactForm">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="4" required></textarea>
+                <button type="submit" id="submitBtn">Submit</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Message Sent</h2>
+            <p>Your message has been sent successfully!</p>
+        </div>
+    </div>
+
+    <footer class="footer-section">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="#contactModal" class="nav-link">Contact Us</a>
+            </div>
+            <p>&copy; 2024 MixiePixie. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+        import { getDatabase, set, ref } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCS3krvqV9N4HX2a5H7yq82RWW_tMilvS0",
+            authDomain: "mixiepixie-eba76.firebaseapp.com",
+            projectId: "mixiepixie-eba76",
+            storageBucket: "mixiepixie-eba76.appspot.com",
+            messagingSenderId: "860212929441",
+            appId: "1:860212929441:web:69c799f4dac9d03f43a1e0",
+            databaseURL: "https://mixiepixie-eba76-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase();
+        const auth = getAuth(app);
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let email = document.getElementById('email');
+            let password = document.getElementById('password');
+            let fname = document.getElementById('cfPassword');
+            let checkBox1 = document.getElementById('check1');
+            let checkBox2 = document.getElementById('check2');
+            let registerForm = document.getElementById('registerForm');
+
+            let registerUser = evt => {
+                evt.preventDefault();
+
+                if (!checkBox1.checked || !checkBox2.checked) {
+                    alert("Both checkboxes must be checked.");
+                    return;
+                }
+
+                createUserWithEmailAndPassword(auth, email.value, password.value)
+                    .then((credentials) => {
+                        set(ref(db, '/UserAuthList/' + credentials.user.uid), {
+                            email: email.value
+                        })
+                            .then(() => {
+                                alert("User registered and data saved in the database. Go to login page to login.");
+                            })
+                            .catch((error) => {
+                                alert("Error storing user data: " + error.message);
+                            });
+                    })
+                    .catch((error) => {
+                        alert("Error registering user: " + error.message);
+                    });
+            }
+
+            registerForm.addEventListener('submit', registerUser);
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const submitBtn = document.getElementById('submitBtn');
+            const contactModal = document.getElementById('contactModal');
+            const confirmationModal = document.getElementById('confirmationModal');
+            const closeModalButtons = document.querySelectorAll('.close');
+
+            // Function to show modal
+            function showModal(modal) {
+                console.log('Showing modal:', modal.id);
+                modal.style.display = 'block';
+            }
+
+            // Function to hide modal
+            function hideModal(modal) {
+                console.log('Hiding modal:', modal.id);
+                modal.style.display = 'none';
+            }
+
+            // Event listener for submit button
+            submitBtn.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent form submission
+
+                // Validate form inputs
+                var email = getInputVal('email');
+                var message = getInputVal('message');
+                console.log(message);
+
+                if (email.trim() !== '' && message.trim() !== '') {
+                    // Form inputs are valid, show confirmation modal
+                    hideModal(contactModal);
+                    showModal(confirmationModal);
+                    saveMessage(email, message);
+                } else {
+                    // Form inputs are not valid, alert user
+                    alert('Please fill out all required fields.');
+                }
+            });
+
+            function getInputVal(id) {
+                return document.getElementById(id).value;
+            }
+
+            function saveMessage(email, message) {
+                const newMessageRef = ref(db, 'messages/' + new Date().getTime());
+                set(newMessageRef, {
+                    email: email,
+                    message: message
+                });
+            }
+            // Event listeners for close buttons
+            closeModalButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    console.log('Close button clicked');
+                    hideModal(confirmationModal);
+                    hideModal(contactModal);
+                });
+            });
+
+            // Event listener to close modal when clicking outside the modal
+            window.addEventListener('click', function (event) {
+                if (event.target === contactModal || event.target === confirmationModal) {
+                    console.log('Clicked outside modal');
+                    hideModal(event.target);
+                }
+            });
+
+            // Find the "Contact Us" link
+            const contactLink = document.querySelector('a[href="#contactModal"]');
+
+            // Add a click event listener to the link
+            contactLink.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent default anchor behavior
+                showModal(contactModal); // Show the contact modal when the link is clicked
+            });
+        });
+
+    </script>
+    <script src="script.js"></script>
+</body>
+
+</html>

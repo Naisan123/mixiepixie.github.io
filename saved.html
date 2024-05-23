@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+    <title>MixiePixie</title>
+</head>
+
+<body>
+    <header class="header-section">
+        <div class="logo">
+            <a href="index.html"><img src="images/logo.jpg" alt="MixiePixie Logo"></a>
+            <a href="index.html" class="nav-link">MixiePixie</a>
+        </div>
+
+        <div class="pages">
+            <div class="item">
+                <a href="index.html" class="nav-link">
+                    <i class='bx bx-home-circle'></i>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="item">
+                <a href="mixer.html" class="nav-link">
+                    <i class='bx bx-fridge'></i>
+                    <span>Mixer</span>
+                </a>
+            </div>
+            <div class="item">
+                <a href="drinks.html" class="nav-link">
+                    <i class='bx bx-drink'></i>
+                    <span>Drinks</span>
+                </a>
+            </div>
+            <div class="item" id="account-dropdown">
+                <a href="#" class="nav-link">
+                    <i class='bx bx-user'></i>
+                    <span>My account</span>
+                    <span class="arrow">&#9662;</span>
+                </a>
+                <div class="dropdown-content">
+                    <div class="dropdown-item">
+                        <a href="login.html" class="nav-link">
+                            <i class='bx bx-log-in'></i>
+                            <span>Login</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item" id="active">
+                        <a href="saved.html" class="nav-link">
+                            <i class='bx bx-book-heart'></i>
+                            <span>Saved</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="privacy.html" class="nav-link">
+                            <i class='bx bx-cookie'></i>
+                            <span>Privacy Policy</span>
+                        </a>
+                    </div>
+                    <div class="dropdown-item">
+                        <a href="#" id="logout-btn" class="nav-link">
+                            <i class='bx bx-log-out'></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+
+        <div class="container-section">
+            <h1>Saved Recipes</h1>
+
+        </div>
+
+        <div id="savedRecipes"></div>
+    </main>
+
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Contact Us</h2>
+            <form id="contactForm">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="4" required></textarea>
+                <button type="submit" id="submitBtn">Submit</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Message Sent</h2>
+            <p>Your message has been sent successfully!</p>
+        </div>
+    </div>
+
+    <footer class="footer-section">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="#contactModal" class="nav-link">Contact Us</a>
+            </div>
+            <p>&copy; 2024 MixiePixie. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+        import { getDatabase, ref, set, get, remove, child } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, setPersistence, browserSessionPersistence, signOut } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCS3krvqV9N4HX2a5H7yq82RWW_tMilvS0",
+            authDomain: "mixiepixie-eba76.firebaseapp.com",
+            projectId: "mixiepixie-eba76",
+            storageBucket: "mixiepixie-eba76.appspot.com",
+            messagingSenderId: "860212929441",
+            appId: "1:860212929441:web:69c799f4dac9d03f43a1e0",
+            databaseURL: "https://mixiepixie-eba76-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase();
+        const auth = getAuth(app);
+        const dbref = ref(db);
+
+        let savedRecipesContainer = document.getElementById("savedRecipes");
+        let recipe = 1;
+
+
+        // Check the authentication state when the page loads
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log("User is logged in:", user);
+                getSavedRecipes();
+            } else {
+                console.log("User is not logged in");
+                window.location.href = "login.html";
+            }
+        });
+
+
+        // Get saved recipes from Firebase
+        function getSavedRecipes() {
+            const user = auth.currentUser;
+            if (user) {
+                const userId = user.uid;
+                const userSavedRecipesRef = ref(db, `UserSavedRecipes/${userId}`);
+
+                get(userSavedRecipesRef).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        // Clear any previous message
+                        savedRecipesContainer.innerHTML = "";
+
+                        // Iterate through the saved recipes and display them
+                        snapshot.forEach((childSnapshot) => {
+                            const recipeId = childSnapshot.key;
+                            const recipe = childSnapshot.val();
+                            addSavedRecipeAsListItem(recipe, recipeId);
+                        });
+                    } else {
+                        savedRecipesContainer.innerHTML = "No saved recipes found.";
+                    }
+                }).catch((error) => {
+                    console.error("Error getting saved recipes:", error);
+                });
+            } else {
+                // If user is not logged in, display the message
+                savedRecipesContainer.innerHTML = "Please log in to view saved recipes.";
+            }
+        }
+
+
+        // Defining how the recipes should be displayed as
+        function addSavedRecipeAsListItem(recipe, recipeId) {
+            let listItem = document.createElement('div');
+            listItem.classList.add('savedRecipe-container');
+
+            let leftSide = document.createElement('div');
+            leftSide.classList.add('savedRecipe-left');
+
+            let heading = document.createElement('h3');
+            heading.textContent = recipe.Name ? recipe.Name : "Unknown";
+
+            let infoParagraph = document.createElement('p');
+            infoParagraph.textContent = recipe.info ? recipe.info : "No info available";
+
+            let image = document.createElement('img');
+            image.src = recipe.image ? recipe.image : "";
+            image.alt = recipe.Name ? recipe.Name : "";
+
+            leftSide.appendChild(heading);
+            leftSide.appendChild(infoParagraph);
+            leftSide.appendChild(image);
+
+            let rightSide = document.createElement('div');
+            rightSide.classList.add('savedRecipe-right');
+            rightSide.style.listStyleType = 'none';
+
+            let Ingredients = document.createElement('li');
+            Ingredients.innerHTML = "<b>Ingredients</b><br>";
+            if (recipe.Ingredients) {
+                for (const [ingredient, amount] of Object.entries(recipe.Ingredients)) {
+                    Ingredients.innerHTML += `${ingredient}: ${amount}<br>`;
+                }
+            }
+
+            let Directions = document.createElement('li');
+            Directions.innerHTML = "<br><b>Directions</b><br>";
+            if (recipe.Directions) {
+                for (const [key, direction] of Object.entries(recipe.Directions)) {
+                    Directions.innerHTML += `${key}: ${direction}<br>`;
+                }
+            }
+
+            // Create heart button
+            let heartButton = document.createElement('i');
+            heartButton.classList.add('bx', 'bxs-heart');
+            heartButton.addEventListener('click', function () {
+                toggleSave(recipe, heartButton, recipeId);
+            });
+
+            // Create a download button
+            let download = document.createElement('i');
+            download.classList.add('bx', 'bx-download');
+            download.addEventListener('click', function () {
+                downloadRecipeAsImage(listItem);
+            });
+
+            rightSide.appendChild(Ingredients);
+            rightSide.appendChild(Directions);
+            rightSide.appendChild(heartButton);
+            rightSide.appendChild(download);
+
+            listItem.appendChild(leftSide);
+            listItem.appendChild(rightSide);
+
+            savedRecipesContainer.appendChild(listItem);
+
+        }
+
+        window.addEventListener('load', getSavedRecipes);
+
+
+        // Download as img function
+        function downloadRecipeAsImage(recipeContainer) {
+            html2canvas(recipeContainer).then(function (canvas) {
+                let imgData = canvas.toDataURL('image/png'); // Convert canvas to image
+
+                let link = document.createElement('a');
+                link.download = 'recipe.png';
+                link.href = imgData;
+
+                link.click();
+            });
+        }
+
+
+        // Toggle save and unsave recipe
+        function toggleSave(recipe, heartButton, recipeId) {
+            const user = auth.currentUser;
+            if (user) {
+                const userId = user.uid;
+                const userRef = ref(db, `UserSavedRecipes/${userId}/${recipeId}`);
+
+                // Check if the recipe is already saved
+                get(userRef).then(snapshot => {
+                    if (snapshot.exists()) {
+                        remove(userRef)
+                            .then(() => {
+                                console.log("Recipe removed");
+                                heartButton.classList.remove('bxs-heart');
+                                heartButton.classList.add('bx-heart');
+                            })
+                            .catch(error => {
+                                console.error("Error removing recipe:", error);
+                            });
+                    } else {
+                        set(userRef, recipe)
+                            .then(() => {
+                                console.log("Recipe saved");
+                                heartButton.classList.remove('bx-heart');
+                                heartButton.classList.add('bxs-heart');
+                            })
+                            .catch(error => {
+                                console.error("Error saving recipe:", error);
+                            });
+                    }
+                }).catch(error => {
+                    console.error("Error checking if recipe exists:", error);
+                });
+            } else {
+                alert("You need to log in");
+            }
+        }
+
+
+        // Events function to logout
+        document.addEventListener("DOMContentLoaded", function () {
+            const logoutButton = document.getElementById('logout-btn');
+            const loggedInUserDiv = document.getElementById('loggedInUser');
+
+            logoutButton.addEventListener('click', e => {
+                e.preventDefault();
+                auth.signOut().then(() => {
+                    localStorage.removeItem("user");
+                    alert("You have logged out");
+                    window.location.href = "index.html";
+                }).catch((error) => {
+                    console.error("Error:", error);
+                });
+            });
+
+            window.addEventListener('beforeunload', () => {
+                localStorage.removeItem("user");
+            });
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const submitBtn = document.getElementById('submitBtn');
+            const contactModal = document.getElementById('contactModal');
+            const confirmationModal = document.getElementById('confirmationModal');
+            const closeModalButtons = document.querySelectorAll('.close');
+
+            // Function to show modal
+            function showModal(modal) {
+                console.log('Showing modal:', modal.id);
+                modal.style.display = 'block';
+            }
+
+            // Function to hide modal
+            function hideModal(modal) {
+                console.log('Hiding modal:', modal.id);
+                modal.style.display = 'none';
+            }
+
+            // Event listener for submit button
+            submitBtn.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent form submission
+
+                // Validate form inputs
+                var email = getInputVal('email');
+                var message = getInputVal('message');
+                console.log(message);
+
+                if (email.trim() !== '' && message.trim() !== '') {
+                    // Form inputs are valid, show confirmation modal
+                    hideModal(contactModal);
+                    showModal(confirmationModal);
+                    saveMessage(email, message);
+                } else {
+                    // Form inputs are not valid, alert user
+                    alert('Please fill out all required fields.');
+                }
+            });
+
+            function getInputVal(id) {
+                return document.getElementById(id).value;
+            }
+
+            function saveMessage(email, message) {
+                const newMessageRef = ref(db, 'messages/' + new Date().getTime());
+                set(newMessageRef, {
+                    email: email,
+                    message: message
+                });
+            }
+            // Event listeners for close buttons
+            closeModalButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    console.log('Close button clicked');
+                    hideModal(confirmationModal);
+                    hideModal(contactModal);
+                });
+            });
+
+            // Event listener to close modal when clicking outside the modal
+            window.addEventListener('click', function (event) {
+                if (event.target === contactModal || event.target === confirmationModal) {
+                    console.log('Clicked outside modal');
+                    hideModal(event.target);
+                }
+            });
+
+            // Find the "Contact Us" link
+            const contactLink = document.querySelector('a[href="#contactModal"]');
+
+            // Add a click event listener to the link
+            contactLink.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent default anchor behavior
+                showModal(contactModal); // Show the contact modal when the link is clicked
+            });
+        });
+
+
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
